@@ -1,4 +1,7 @@
 #include <iostream>
+#include <unordered_map>
+
+template <typename T> class Iterator;
 
 template<typename T>
 class List {
@@ -6,14 +9,10 @@ private:
 
 	struct Node {
 		// конструктор узла, next=nullptr как затычка или если это первый узел
-		Node(const T& t) : data(t), next(nullptr) {} 
+		Node(const T& t) : data(t), next(nullptr) {}
 		T data;																	//хранимое в узле
 		Node* next;																//указатель на следующий узел относительного этого узла
-		
-		Node& operator++() {
-			next = next->next;
-			return *this;
-		}
+
 	};
 
 	Node* head;																	//указатель на первый элемент в списке 
@@ -22,36 +21,10 @@ private:
 
 public:
 
-	// удобный способ перемещения по списку
-	class Iterator { 
-	public:
-		Node* current = nullptr;
-		Iterator(Node* node) {	//конструктор 
-			current = node;
-		}									
-		
-		T& operator*() {														//разыменователь (получение data по указателю)
-			return current->data;												//перешли к структуре, где хранится data и "вызвали" ее
-		}
-
-		Iterator& operator++() {												//переход итератора к следующему узлу
-			if(current){														// проверка на то, что список не пуст
-				current = current->next;										// перемещаем current на следующий узел
-			}
-			return *this;
-		}
-
-		bool operator !=(const Iterator& other) const {
-			return current != other.current;
-		}
-
-		bool operator ==(const Iterator& other) const {
-			return current == other.current;
-		}
-	};
+	friend class Iterator<T>;
 
 	List() : head(nullptr), tail(nullptr), size(0) {}						//конструктор
-	
+
 	List(const List& list) : head(nullptr), tail(nullptr), size(0) { //конструктор копирования
 		for (auto it = list.begin(); it != list.end(); ++it) {           //проходимся итератором по всем узлам пришедшего списка
 			append(*it);												//на каждом шаге добавляем новый узел к исходному списку
@@ -102,7 +75,7 @@ public:
 		return 1;
 	}
 
-	List& operator=(List&& list) noexcept{
+	List& operator=(List&& list) noexcept {
 		if (this != &list) {
 			clear();
 			head = list.head;
@@ -119,14 +92,14 @@ public:
 		if (size == 0) throw std::out_of_range("list is empty");						//проверка на пустой список
 		if (ind < 0 || ind > size - 1) throw std::out_of_range("incorrect index");			//проверка на правильность ввода индекса
 
-		Iterator it(head);												//проход i-шками до нужного места, каждый раз сдвигая итератор
+		Iterator<T> it(head);												//проход i-шками до нужного места, каждый раз сдвигая итератор
 		for (int i = 0; i < ind; i++) {
 			++it;
 		}
 		return *it;													//возвращаем date итератора
 	}
 
-	const T& operator[](size_t ind) const {       
+	const T& operator[](size_t ind) const {
 		if (size == 0) throw std::out_of_range("list is empty");						//проверка на пустой список
 		if (ind < 0 || ind > size - 1) throw std::out_of_range("incorrect index");			//проверка на правильность ввода индекса
 
@@ -155,13 +128,14 @@ public:
 		else {										// если это не первый узел, то просто создаем новый узел
 			tail->next = newNode;					//получили доступ к next предыдущего узла через -> и записали туда ссылку на новый(этот) узел
 			tail = newNode;							// указали, что конец это текущий узел
+			tail->next = nullptr;
 		}
 		size++;
 	}
 
 	void remove(const T& value) {					// удаление узла с значением value
 		//проверка на пустой список
-		if (!head) { 
+		if (!head) {
 			return;
 		}
 
@@ -174,13 +148,13 @@ public:
 			return;
 		}
 
-		for (Node* current(head); current != tail; current = current->next) {				
+		for (Node* current(head); current != tail; current = current->next) {
 			if (current->next->data == value) {
 				Node* tmp = current->next;						//чтобы не потерять память при удалении
 				current->next = current->next->next;	    //перекидывает указатель next через один(через удаляемый элемент)
-				
-				Iterator ITtmp(tmp);
-				Iterator ITtail(tail);
+
+				Iterator<T> ITtmp(tmp);
+				Iterator<T> ITtail(tail);
 				if (ITtmp == ITtail) {									//если вдруг узел был хвостом, то передаем хвост предыдущему(current)
 					tail = current;
 				}
@@ -188,9 +162,11 @@ public:
 				size--;
 				return;
 			}
+
 		}
+		return;
 	}
-	
+
 	void remove() { //удаление head
 		//проверка на пустой список
 		if (!head) {
@@ -198,7 +174,7 @@ public:
 		}
 
 		Node* tmp = head->next;
-		Iterator ITtmp(tmp);
+		Iterator<T> ITtmp(tmp);
 		if (ITtmp == nullptr) { //при удалении последнего нода, нужно сказать что tail уже nullptr
 			tail = nullptr;
 		}
@@ -245,7 +221,7 @@ public:
 		size++;
 	}
 
-	void clear() { 
+	void clear() {
 		Node* current = head;												// первый элемент для удаления это самый первый
 		while (current) {													//пока current не станет нулем (current = nullptr)
 			Node* nextNode = current->next;									//сохраняем указатель на следующий после узел
@@ -257,10 +233,14 @@ public:
 		size = 0;
 	}
 
-	Iterator search(const T& value) {						//поиск элемента(возвращает указатель на него в виде итератор)
-		for (Iterator current(head); current != end(); ++current) {
-			if (value == *current) {
+	Iterator<T> search(const T& value, size_t number = 1) {						//поиск элемента(возвращает указатель на него в виде итератор)
+		size_t counting = 0;
+		for (Iterator<T> current(head); current != end(); ++current) {
+			if (value == *current && counting == number - 1) {
 				return current;
+			}
+			else if (value == *current) {
+				counting++;
 			}
 		}
 		return nullptr;
@@ -277,16 +257,16 @@ public:
 		return 0;
 	}
 
-	Iterator begin() const {						// получение итератора на начало
-		return Iterator(head);
+	Iterator<T> begin() const {						// получение итератора на начало
+		return Iterator<int>(head);
 	}
 
-	Iterator end() const {							// получение итератора конец
-		return Iterator(nullptr);
+	Iterator<T> end() const {							// получение итератора конец
+		return Iterator<int>(nullptr);
 	}
-	
+
 	void printList() {
-		for (Iterator it = begin(); it != end(); ++it) {       //проходимся итератором по всему списку
+		for (Iterator<T> it = begin(); it != end(); ++it) {       //проходимся итератором по всему списку
 			std::cout << *it << " => ";							//выводим значение итератора
 		}
 		std::cout << "nullptr";									//вышенка на торте
@@ -308,5 +288,80 @@ public:
 		}
 		return ostr;
 	}
+
+	void removeDuplicate() {
+
+		std::unordered_map<int, int> map;
+
+		if (size <= 1) {
+			return;
+		}
+
+		for (Node* current = head; current != tail->next; current = current->next) {
+			map[current->data] = 0;
+		}
+
+		Node* current = head;
+		map[current->data]++;
+		while (current != tail) {
+
+			while (current != tail && map[current->next->data] >= 1) {
+				Node* tmp = current->next;
+				current->next = current->next->next;
+
+				Iterator<T> ITtmp(tmp);
+				Iterator<T> ITtail(tail);
+				if (ITtmp == ITtail) {
+					tail = current;
+				}
+				delete tmp;
+				size--;
+			}
+
+			if (current != tail && map[current->next->data] == 0) {
+				map[current->next->data]++;
+			}
+
+			if (current != tail) {
+				current = current->next;
+			}
+		}
+
+	}
+
 };
+
+// удобный способ перемещения по списку
+template <typename T>
+class Iterator {
+private:
+	typename List<T>::Node* current = nullptr;
+
+public:
+	friend class List<T>;
+	Iterator(typename List<T>::Node* node) {	//конструктор 
+		current = node;
+	}
+
+	T& operator*() {														//разыменователь (получение data по указателю)
+		return current->data;												//перешли к структуре, где хранится data и "вызвали" ее
+	}
+
+	Iterator& operator++() {												//переход итератора к следующему узлу
+		if (current) {														// проверка на то, что список не пуст
+			current = current->next;										// перемещаем current на следующий узел
+		}
+		return *this;
+	}
+
+	bool operator !=(const Iterator& other) const {
+		return current != other.current;
+	}
+
+	bool operator ==(const Iterator& other) const {
+		return current == other.current;
+	}
+};
+
+
 //мне очень понравилась лаба
