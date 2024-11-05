@@ -51,7 +51,9 @@ TEST(List, can_create_Node_with_insert_in_place_tail) {
 	ls.append(6); //1
 	ls.append(7); //1
 	ls.append(5);
+	ls.printList();
 	ls.insert(10, 4);
+	ls.printList();
 	EXPECT_NO_THROW(ls.insert(10, 2)); //2
 }
 
