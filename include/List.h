@@ -21,37 +21,7 @@ private:
 
 public:
 
-	// удобный способ перемещения по списку
-	template <typename T>
-	class Iterator {
-	private:
-		typename List<T>::Node* current = nullptr;
-
-	public:
-		friend class List<T>;
-		Iterator(typename List<T>::Node* node) {	//конструктор 
-			current = node;
-		}
-
-		T& operator*() {														//разыменователь (получение data по указателю)
-			return current->data;												//перешли к структуре, где хранится data и "вызвали" ее
-		}
-
-		Iterator& operator++() {												//переход итератора к следующему узлу
-			if (current) {														// проверка на то, что список не пуст
-				current = current->next;										// перемещаем current на следующий узел
-			}
-			return *this;
-		}
-
-		bool operator !=(const Iterator& other) const {
-			return current != other.current;
-		}
-
-		bool operator ==(const Iterator& other) const {
-			return current == other.current;
-		}
-	};
+	friend class Iterator<T>;
 
 	List() : head(nullptr), tail(nullptr), size(0) {}						//конструктор
 
@@ -361,6 +331,37 @@ public:
 
 };
 
+// удобный способ перемещения по списку
+template <typename T>
+class Iterator {
+private:
+	typename List<T>::Node* current = nullptr;
+
+public:
+	friend class List<T>;
+	Iterator(typename List<T>::Node* node) {	//конструктор 
+		current = node;
+	}
+
+	T& operator*() {														//разыменователь (получение data по указателю)
+		return current->data;												//перешли к структуре, где хранится data и "вызвали" ее
+	}
+
+	Iterator& operator++() {												//переход итератора к следующему узлу
+		if (current) {														// проверка на то, что список не пуст
+			current = current->next;										// перемещаем current на следующий узел
+		}
+		return *this;
+	}
+
+	bool operator !=(const Iterator& other) const {
+		return current != other.current;
+	}
+
+	bool operator ==(const Iterator& other) const {
+		return current == other.current;
+	}
+};
 
 
 //мне очень понравилась лаба
