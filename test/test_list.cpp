@@ -17,52 +17,47 @@ TEST(List, can_create_Node_with_append_after_head) {
 	EXPECT_NO_THROW(ls.append(90));
 }
 
-TEST(List, can_create_Node_with_insert) {
-	List<int> ls;
-	EXPECT_NO_THROW(ls.insert(10));
-}
-
-TEST(List, can_create_Node_with_insert_in_place_0) {
+TEST(List, can_create_Node_with_insert_in_null) {
 	List<int> ls;
 	EXPECT_NO_THROW(ls.insert(10,0));
 }
 
-TEST(List, can_create_Node_with_insert_negativ_place) {
+TEST(List, can_create_Node_with_insert) {
 	List<int> ls;
-	EXPECT_ANY_THROW(ls.insert(10, -1));
-}
-
-TEST(List, can_create_Node_with_insert_too_large_place) {
-	List<int> ls;
-	ls.append(5);
-	EXPECT_ANY_THROW(ls.insert(10, 2));
+	ls.append(10);
+	ls.append(12);
+	ls.append(13);
+	auto* node = ls.getNode(1);
+	EXPECT_NO_THROW(ls.insert(10, node););
 }
 
 TEST(List, can_create_Node_with_insert_in_place_between_node) {
 	List<int> ls;
 	ls.append(5); //0
-	ls.append(6); //1 => 2
-	EXPECT_NO_THROW(ls.insert(10, 1)); //новый 1
+	ls.append(6); //1 
+	ls.append(6); //2 => 3
+	auto* node = ls.getNode(1);
+	EXPECT_NO_THROW(ls.insert(10, node)); //новый 2
 }
 
 TEST(List, can_create_Node_with_insert_in_place_tail) {
 	List<int> ls;
-	ls.append(5); //0
-	ls.append(6); //1
-	ls.append(7); //1
+	ls.append(5); 
+	ls.append(6); 
+	ls.append(7); 
 	ls.append(5);
 	ls.printList();
-	ls.insert(10, 4);
-	ls.printList();
-	EXPECT_NO_THROW(ls.insert(10, 2)); //2
+	auto* node = ls.getNode(3);
+	EXPECT_NO_THROW(ls.insert(10, node)); 
 }
 
 TEST(List, check_insert_corret_place) {
 	List<int> ls;
-	ls.append(5); //0
+	ls.append(5); 
 	ls.append(6); 
-	ls.insert(10, 1); //1 , (6) 1 => 2 
-	EXPECT_EQ(ls[1], 10); 
+	auto* node = ls.getNode(1);
+	ls.insert(10, node); 
+	EXPECT_EQ(ls[1], 6); 
 }
 
 TEST(List, check_insert_without_place) {

@@ -28,7 +28,6 @@ public:
 		typename List<T>::Node* current = nullptr;
 
 	public:
-		friend class List<T>;
 		Iterator(typename List<T>::Node* node) {	//конструктор 
 			current = node;
 		}
@@ -213,26 +212,20 @@ public:
 		size--;
 	}
 
-	void insert(const T& value, int place) { //вставка в узел в любое место списка
-		if (place < 0 || place > size) { //проверка на размер
-			throw std::out_of_range("place is incorrect");
-		}
-
-		if (place == 0) {				//если вставка в начало, то используем уже сделанную функцию
-			insert(value);
+	void insert(const T& value, Node* node) { //вставка в узел после указанного узла
+		if (!node) {
 			return;
 		}
 
-		//здесь можно было использовать итератор, но я не стал
-		Node* current = head;					//создаем пробегающий указатель
-		for (int i = 0; i < place - 1; i++) {		//проходим  
-			current = current->next;
-		}
-		Node* tmp = current->next;					//сохраняем во временную переменную указатель на текущий next
 		Node* newNode = new Node(value);			//создаем новый узел
-		current->next = newNode;					//перезаписываем текущий next на новый узел
-		newNode->next = tmp;						//записываем next из облака как указатель на следующий после нового узла
-		size++;
+		newNode->next = node->next;					//добавляем лист к нашему пути
+		
+		if (tail == node) {							//а вдруг это конец?
+			tail = newNode;
+		}
+
+		node->next = newNode;						//удаление ребра и создание нового ребра с тем новым листом
+		size++; //size++
 	}
 
 	void insert(const T& value) {	//вставка в начало списка
@@ -249,6 +242,19 @@ public:
 			head->next = tmp;													//старая голова теперь просто head->next(второй элемент)
 		}
 		size++;
+	}
+
+	Node* getNode(int index) {
+		Node* current = head;
+		int count = 0;
+		while (current != nullptr) {
+			if (count == index) {
+				return current;
+			}
+			current = current->next;
+			count++;
+		}
+		return nullptr; // Если индекс вне диапазона
 	}
 
 	void clear() {
